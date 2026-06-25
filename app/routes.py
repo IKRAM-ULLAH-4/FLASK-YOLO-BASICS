@@ -1,18 +1,14 @@
+# app/routes.py
+
 from flask import Blueprint, render_template, request
 from werkzeug.utils import secure_filename
-from pathlib import Path
+import os
 
 from .detector import detect_objects
 
 main = Blueprint("main", __name__)
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-UPLOAD_FOLDER = BASE_DIR / "app" / "static" / "uploads"
-RESULT_FOLDER = BASE_DIR / "app" / "static" / "results"
-
-UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
-RESULT_FOLDER.mkdir(parents=True, exist_ok=True)
+UPLOAD_FOLDER = "app/static/uploads"
 
 
 @main.route("/", methods=["GET", "POST"])
@@ -23,34 +19,25 @@ def home():
 
     if request.method == "POST":
 
-        file = request.files.get("image")
+        file = request.files["image"]
 
-        if file and file.filename:
+        if file:
 
             filename = secure_filename(file.filename)
 
-            filepath = UPLOAD_FOLDER / filename
+            filepath = os.path.join(
+                UPLOAD_FOLDER,
+                filename
+            )
 
-            file.save(str(filepath))
+            file.save(filepath)
 
-            try:
+            result_image, detections = detect_objects(filepath)
 
-                result_image, detections = detect_objects(str(filepath))
-
-                if result_image:
-                    result_image = result_image.replace(
-                        "app/static/",
-                        ""
-                    )
-
-            except Exception as e:
-
-                print("Detection Error:", e)
-
-                detections = [{
-                    "class": f"ERROR: {str(e)}",
-                    "confidence": "-"
-                }]
+            result_image = result_image.replace(
+                "app/static/",
+                ""
+            )
 
     return render_template(
         "index.html",

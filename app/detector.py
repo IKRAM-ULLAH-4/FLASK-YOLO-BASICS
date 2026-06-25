@@ -1,16 +1,8 @@
 from ultralytics import YOLO
-from pathlib import Path
 import cv2
 import os
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-RESULT_FOLDER = BASE_DIR / "app" / "static" / "results"
-
-RESULT_FOLDER.mkdir(parents=True, exist_ok=True)
-
 model = YOLO("models/yolov8n.pt")
-
 
 def detect_objects(image_path):
 
@@ -22,16 +14,18 @@ def detect_objects(image_path):
 
     result = results[0]
 
-    output_path = RESULT_FOLDER / os.path.basename(image_path)
+    output_path = os.path.join(
+        "app/static/results",
+        os.path.basename(image_path)
+    )
 
     annotated = result.plot()
 
-    cv2.imwrite(str(output_path), annotated)
+    cv2.imwrite(output_path, annotated)
 
     detections = []
 
     for box in result.boxes:
-
         cls_id = int(box.cls[0])
         conf = float(box.conf[0])
 
@@ -40,4 +34,4 @@ def detect_objects(image_path):
             "confidence": round(conf, 2)
         })
 
-    return str(output_path), detections
+    return output_path, detections
