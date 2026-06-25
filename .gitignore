@@ -12,9 +12,6 @@ myenv/
 instance/
 .webassets-cache
 
-# Uploaded Images
-app/static/uploads/*
-app/static/results/*
 
 # Keep folders even when empty
 !app/static/uploads/.gitkeep
