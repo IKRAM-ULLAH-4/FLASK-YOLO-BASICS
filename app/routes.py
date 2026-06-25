@@ -1,19 +1,18 @@
-# app/routes.py
-
 from flask import Blueprint, render_template, request
 from werkzeug.utils import secure_filename
-import os
+from pathlib import Path
 
 from .detector import detect_objects
 
 main = Blueprint("main", __name__)
 
-UPLOAD_FOLDER = "app/static/uploads"
-RESULT_FOLDER = "app/static/results"
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Create folders automatically
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(RESULT_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = BASE_DIR / "app" / "static" / "uploads"
+RESULT_FOLDER = BASE_DIR / "app" / "static" / "results"
+
+UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+RESULT_FOLDER.mkdir(parents=True, exist_ok=True)
 
 
 @main.route("/", methods=["GET", "POST"])
@@ -28,22 +27,15 @@ def home():
 
         if file and file.filename:
 
-            # Ensure folders exist
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            os.makedirs(RESULT_FOLDER, exist_ok=True)
-
             filename = secure_filename(file.filename)
 
-            filepath = os.path.join(
-                UPLOAD_FOLDER,
-                filename
-            )
+            filepath = UPLOAD_FOLDER / filename
 
-            file.save(filepath)
+            file.save(str(filepath))
 
             try:
 
-                result_image, detections = detect_objects(filepath)
+                result_image, detections = detect_objects(str(filepath))
 
                 if result_image:
                     result_image = result_image.replace(
